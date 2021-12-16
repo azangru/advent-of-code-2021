@@ -22,7 +22,6 @@ Deno.test("solve1", () => {
 
 Deno.test({
   name: 'solve2',
-  only: true,
   fn: () => {
     assertEquals(solve2(example1), 288957);
   }
