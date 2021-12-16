@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.116.0/testing/asserts.ts";
 import { solve1, Grid as Grid1 } from './part1.ts';
-// import { solve2 } from './part2.ts';
+import { solve2, Grid as Grid2 } from './part2.ts';
 
 // initial state
 const simpleExample1 = `
@@ -291,6 +291,45 @@ const example1_step100 = `
 6789998766
 `.trim();
 
+const example1_step193 = `
+5877777777
+8877777777
+7777777777
+7777777777
+7777777777
+7777777777
+7777777777
+7777777777
+7777777777
+7777777777
+`.trim();
+
+const example1_step194 = `
+6988888888
+9988888888
+8888888888
+8888888888
+8888888888
+8888888888
+8888888888
+8888888888
+8888888888
+8888888888
+`.trim();
+
+const example1_step195 = `
+0000000000
+0000000000
+0000000000
+0000000000
+0000000000
+0000000000
+0000000000
+0000000000
+0000000000
+0000000000
+`.trim();
+
 Deno.test("part 1 simulation with simple example", () => {
   const grid = new Grid1(simpleExample1);
 
@@ -371,10 +410,28 @@ Deno.test("solve1 with larger example", () => {
   assertEquals(solve1(example1), 1656);
 });
 
-// Deno.test({
-//   name: 'solve2',
-//   only: true,
-//   fn: () => {
-//     assertEquals(solve2(example1), 288957);
-//   }
-// });
+
+
+Deno.test({
+  name: 'part 2 simulation',
+  fn: () => {
+    const grid = new Grid2(example1);
+
+    grid.simulate(193);
+    assertEquals(grid.toString(), example1_step193);
+
+    grid.simulate(1);
+    assertEquals(grid.toString(), example1_step194);
+
+    grid.simulate(1);
+    assertEquals(grid.toString(), example1_step195);
+  }
+});
+
+
+Deno.test({
+  name: 'solve2',
+  fn: () => {
+    assertEquals(solve2(example1), 195);
+  }
+});

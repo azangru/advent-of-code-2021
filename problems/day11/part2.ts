@@ -1,72 +1,121 @@
-const PARENTHESES = [
-  ['(', ')'],
-  ['[', ']'],
-  ['{', '}'],
-  ['<', '>']
-] as const;
-
-const parenthesesMap = new Map<string, string>(PARENTHESES);
-const openingParentheses = new Set([...parenthesesMap.keys()]);
-
-const points = {
-  ')': 1,
-  ']': 2,
-  '}': 3,
-  '>': 4
+type Cell = {
+  value: number;
+  flashed: boolean;
 };
 
 export const solve2 = (input: string) => {
-  const lines = input.split('\n');
+  const grid = new Grid(input);
+  grid.simulateUntilAllFlashed();
 
-  const scores = lines
-    .filter(isValidLine)
-    .map(completeLine)
-    .map(scoreLine);
-
-  scores.sort((a, b) => a - b);
-
-  return scores[Math.floor(scores.length / 2)];
+  return grid.stepCount;
 };
 
-const isValidLine = (line: string) => findFirstIllegalCharacter(line) === null;
+export class Grid {
+  grid: Cell[][];
+  stepCount = 0;
 
-const findFirstIllegalCharacter = (line: string) => {
-  const stack = [];
+  constructor(input: string) {
+    this.grid = this.createGrid(input)
+  }
 
-  const characters = line.split('');
+  simulate(cycles: number) {
+    for (let i = 0; i < cycles; i++) {
+      this.updateGrid();
+    }
+  }
 
-  for (const character of characters) {
-    if (openingParentheses.has(character)) {
-      stack.push(character)
-    } else {
-      const lastOpeningCharacter = stack.pop() as string;
-      if (character !== parenthesesMap.get(lastOpeningCharacter)) {
-        return character;
+  simulateUntilAllFlashed() {
+    let areAllFlashing = false;
+
+    while(!areAllFlashing) {
+      areAllFlashing = this.updateGrid();
+      this.stepCount += 1;
+    }
+  }
+
+  private createGrid(input: string): Cell[][] {
+    return input
+      .split('\n')
+      .map(line => line.split('').map((digit => parseInt(digit))))
+      .map(line => line.map(number => ({ value: number, flashed: false })));
+  }
+
+  updateGrid() {
+    this.addOne();
+    this.checkGrid();
+
+    const areAllFlashing = this.areAllFlashing();
+    this.resetFlashed();
+
+    return areAllFlashing;
+  }
+
+  addOne() {
+    for (let rowIndex = 0; rowIndex < this.grid.length; rowIndex++) {
+      for (let columnIndex = 0; columnIndex < this.grid.length; columnIndex++) {
+        this.grid[rowIndex][columnIndex].value += 1;
       }
     }
   }
 
-  return null;
-};
-
-const completeLine = (line: string) => {
-  const stack = [];
-
-  const characters = line.split('');
-
-  for (const character of characters) {
-    if (openingParentheses.has(character)) {
-      stack.push(character)
-    } else {
-      stack.pop();
+  checkGrid() {
+    for (let rowIndex = 0; rowIndex < this.grid.length; rowIndex++) {
+      for (let columnIndex = 0; columnIndex < this.grid.length; columnIndex++) {
+        const cell = this.grid[rowIndex][columnIndex];
+        if (!cell.flashed && cell.value > 9) {
+          cell.flashed = true;
+          this.updateAroundFlashed({rowIndex, columnIndex}); // <--- HERE!!!
+        }
+      }
     }
   }
 
-  return stack.reverse().map(char => parenthesesMap.get(char)) as string[];
-};
+  updateAroundFlashed(position: {rowIndex: number, columnIndex: number}) {
+    const { rowIndex, columnIndex } = position;
 
-const scoreLine = (characters: string[]) => {
-  return characters.reduce((acc, character) => {
-    return acc * 5 + points[character as keyof typeof points];
-  }, 0);
-};
+    for (let i = Math.max(rowIndex - 1, 0); i <= rowIndex + 1; i++) {
+      for (let j = Math.max(columnIndex - 1, 0); j <= columnIndex + 1; j++) {
+        if (!(i === rowIndex && j === columnIndex)) {
+          const cell = this.grid[i]?.[j];
+          if (typeof cell === 'undefined') {
+            continue;
+          }
+
+          cell.value += 1;
+
+          if (cell.value === 10) {
+            cell.flashed = true;
+            this.updateAroundFlashed({ rowIndex: i, columnIndex: j });
+          }
+        }
+      }
+    }
+  }
+
+  resetFlashed() {
+    for (const row of this.grid) {
+      for (const cell of row) {
+        if (cell.value > 9) {
+          cell.value = 0;
+          cell.flashed = false;
+        }
+      }
+    }
+  }
+
+  areAllFlashing() {
+    for (const row of this.grid) {
+      for (const cell of row) {
+        if (!cell.flashed) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  toString() {
+    return this.grid.map(line => line.map(cell => cell.value).join('')).join('\n');
+  }
+}
