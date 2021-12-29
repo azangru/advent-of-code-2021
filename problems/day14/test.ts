@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.116.0/testing/asserts.ts";
 import { solve1, Chain as Chain1 } from './part1.ts';
-// import { solve2 } from './part2.ts';
+import { solve2, Chain as Chain2 } from './part2.ts';
 
 const example1 = `
 NNCB
@@ -45,9 +45,16 @@ Deno.test("solve1", () => {
   assertEquals(solve1(example1), 1588);
 });
 
-// Deno.test({
-//   name: 'solve2',
-//   fn: () => {
+Deno.test("Chain2, 10 steps", () => {
+  const chain = new Chain2(example1);
+  chain.runSteps(10);
 
-//   }
-// });
+  const leastCommonElementCount = chain.getLeastCommonElementCount();
+  const mostCommonElementCount = chain.getMostCommonElementCount();
+
+  assertEquals(mostCommonElementCount - leastCommonElementCount, 1588);
+});
+
+Deno.test("solve2", () => {
+  assertEquals(solve2(example1), 2188189693529);
+});
